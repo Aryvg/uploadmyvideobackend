@@ -1,7 +1,7 @@
 const User = require('../model/User');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
-const transporter = require('../config/nodemailer');
+const sendEmail = require('../utils/sendEmail');
 //to remove duplicate error start from here
 const mongoose = require('mongoose');
 
@@ -31,8 +31,7 @@ const sendVerificationCode = async (user) => {
     await user.save();
 
     try {
-        await transporter.sendMail({
-            from: process.env.EMAIL_USER,
+        await sendEmail({
             to: user.email,
             subject: 'Verify your email',
             text: `Your verification code is ${code}. It expires in 15 minutes.`,
