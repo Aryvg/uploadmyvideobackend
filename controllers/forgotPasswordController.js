@@ -1,7 +1,7 @@
 const User = require('../model/User');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
-const transporter = require('../config/nodemailer');
+const sendEmail = require('../utils/sendEmail');
 
 const forgotPassword = async (req, res) => {
     const email = req.body?.email;
@@ -33,13 +33,16 @@ const forgotPassword = async (req, res) => {
         user.resetPasswordExpires = Date.now() + 10 * 60 * 1000;
         await user.save();
 
-        await transporter.sendMail({
-            from: process.env.EMAIL_USER,
-            to: user.email,
-            subject: 'Your password reset code',
-            text: `Your password reset code is ${code}. It expires in 10 minutes.`,
-            html: `<p>Your password reset code is <strong>${code}</strong>.</p><p>It expires in 10 minutes.</p>`
-        });
+        try {
+            await sendEmail({
+                to: user.email,
+                subject: 'Your password reset code',
+                text: `Your password reset code is ${code}. It expires in 10 minutes.`,
+                html: `<p>Your password reset code is <strong>${code}</strong>.</p><p>It expires in 10 minutes.</p>`
+            });
+        } catch (err) {
+            console.error('Password reset email failed:', err.message);
+        }
 
         return res.status(200).json({ message: 'A reset code has been sent successfully.', code });
     } catch (err) {
